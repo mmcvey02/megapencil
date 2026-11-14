@@ -41,6 +41,7 @@ class DirectSelectTool(AnchorTool):
     def _abort(self, view) -> None:
         for it in self.live:
             view.tab.scene.preview_path(it, None)
+        view.unfloat()
         self._reset()
 
     def _prune(self, view) -> None:
@@ -119,6 +120,8 @@ class DirectSelectTool(AnchorTool):
             if (view.to_view(pos) - view.to_view(self.press)).manhattanLength() < DRAG_START:
                 return
             self.dragging = True
+            if self.base:
+                view.float_items(list(self.base))
         mods = ev.modifiers()
         if self.mode == "anchors":
             dx, dy = pos.x() - self.press.x(), pos.y() - self.press.y()
@@ -173,6 +176,7 @@ class DirectSelectTool(AnchorTool):
         tab, scene = view.tab, view.tab.scene
         mode, dragging, live = self.mode, self.dragging, self.live
         shift = bool(ev.modifiers() & Qt.ShiftModifier)
+        view.unfloat()
         if mode in ("anchors", "handle") and dragging and live:
             self._commit(view, live, "Move Anchors" if mode == "anchors" else "Edit Handle")
         elif mode == "anchors" and not dragging and self.clicked is not None:

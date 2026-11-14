@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPen, QTransform
-from PySide6.QtWidgets import QGraphicsView
+from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QTransform
+from PySide6.QtWidgets import QGraphicsView, QStyleOptionGraphicsItem
 
 from ..commands import PropertyCommand
 
@@ -25,6 +25,9 @@ class CanvasView(QGraphicsView):
         self.guide_drag: tuple[str, float | None, int | None] | None = None  # orient, pos, index
         self._space = False
         self._panning = None
+        self._cache: QPixmap | None = None  # rendered scene; overlays are drawn on top
+        self._floating: list | None = None  # graphics drawn live above the cache during a drag
+        tab.scene.changed.connect(self._invalidate)
         self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
         self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         self.setTransformationAnchor(QGraphicsView.NoAnchor)
@@ -46,7 +49,71 @@ class CanvasView(QGraphicsView):
         return n / self.zoom
 
     def refresh(self) -> None:
+        """Repaint overlays only (the rendered scene is cached)."""
         self.viewport().update()
+
+    def _invalidate(self, *_):
+        if self._floating is None:  # while floating, only the floated items change
+            self._cache = None
+        self.viewport().update()
+
+    def float_items(self, items, limit: int = 300) -> None:
+        """Start a drag: the given items are painted live above a cached
+        picture of everything else, so dragging a few objects stays fast in
+        documents with thousands of objects."""
+        graphics = [g for it in items for leaf in it.leaves()
+                    if (g := self.tab.scene.graphics.get(id(leaf))) is not None]
+        self._floating = graphics if 0 < len(graphics) <= limit else None
+        self._cache = None
+
+    def unfloat(self) -> None:
+        if self._floating is not None:
+            self._floating = None
+            self._cache = None
+            self.viewport().update()
+
+    def resizeEvent(self, ev) -> None:
+        self._cache = None
+        super().resizeEvent(ev)
+
+    def paintEvent(self, ev) -> None:
+        """Paint the cached scene, then the overlays.
+
+        Re-rendering thousands of objects takes tens of milliseconds, so the
+        scene is rendered to a pixmap only when it, the zoom or the scroll
+        position changes; hover, marquee and tool feedback reuse the pixmap.
+        """
+        vp = self.viewport()
+        if self._cache is None:
+            dpr = vp.devicePixelRatioF()
+            pm = QPixmap(vp.size() * dpr)
+            pm.setDevicePixelRatio(dpr)
+            p = QPainter(pm)
+            p.setRenderHints(self.renderHints())
+            floating = [g for g in (self._floating or []) if g.isVisible()]
+            for g in floating:
+                g.setVisible(False)
+            self.render(p, QRectF(0, 0, vp.width(), vp.height()), vp.rect())
+            for g in floating:
+                g.setVisible(True)
+            p.end()
+            self._cache = pm
+        p = QPainter(vp)
+        p.drawPixmap(0, 0, self._cache)
+        if self._floating:
+            p.setRenderHints(self.renderHints())
+            vt = self.viewportTransform()
+            opt = QStyleOptionGraphicsItem()
+            for g in self._floating:
+                if g.scene() is not None and g.isVisible():
+                    p.save()
+                    p.setTransform(g.sceneTransform() * vt)
+                    p.setOpacity(g.effectiveOpacity())
+                    g.paint(p, opt, None)
+                    p.restore()
+            p.resetTransform()
+        self._paint_overlays(p)
+        p.end()
 
     # -- zoom / pan ---------------------------------------------------
     def set_zoom(self, z: float, anchor: QPointF | None = None) -> None:
@@ -55,6 +122,7 @@ class CanvasView(QGraphicsView):
             anchor = QPointF(self.viewport().width() / 2, self.viewport().height() / 2)
         before = self.to_scene(anchor)
         self.zoom = z
+        self._cache = None
         self.setTransform(QTransform.fromScale(z, z))
         after = self.to_scene(anchor)
         d = (after - before) * z
@@ -168,6 +236,7 @@ class CanvasView(QGraphicsView):
 
     def scrollContentsBy(self, dx: int, dy: int) -> None:
         super().scrollContentsBy(dx, dy)
+        self._cache = None
         self.zoomChanged.emit(self.zoom)  # rulers follow scrolling
 
     # -- guides -------------------------------------------------------
@@ -218,9 +287,8 @@ class CanvasView(QGraphicsView):
         self.refresh()
 
     # -- overlays -----------------------------------------------------
-    def drawForeground(self, painter: QPainter, rect: QRectF) -> None:
+    def _paint_overlays(self, painter: QPainter) -> None:
         painter.save()
-        painter.resetTransform()
         painter.setRenderHint(QPainter.Antialiasing, False)
         w, h = self.viewport().width(), self.viewport().height()
         if self.guides_visible:

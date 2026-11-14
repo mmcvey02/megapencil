@@ -77,6 +77,7 @@ class SelectTool(Tool):
     def _cancel(self, view) -> None:
         if self.mode in ("move", "scale", "rotate"):
             view.tab.scene.preview_transform(view.tab.scene.selection, None)
+            view.unfloat()
         if self.mode == "guide":
             view.guide_drag = None
         self._reset()
@@ -143,6 +144,8 @@ class SelectTool(Tool):
             if (view.to_view(pos) - view.to_view(self.press)).manhattanLength() < DRAG_START:
                 return
             self.dragging = True
+            if self.mode in ("move", "scale", "rotate"):
+                view.float_items(scene.selection)
         mods = ev.modifiers()
         shift = bool(mods & Qt.ShiftModifier)
         if self.mode == "guide":
@@ -179,6 +182,7 @@ class SelectTool(Tool):
                 view.guide_drag = None
         elif mode in ("move", "scale", "rotate"):
             scene.preview_transform(scene.selection, None)
+            view.unfloat()
             if dragging and t is not None and not t.is_identity(1e-9):
                 items = ops.top_level_only(scene.selection)
                 if mode == "move" and self.duplicate:

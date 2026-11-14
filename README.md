@@ -4,7 +4,7 @@ MegaPencil is a desktop vector graphics editor for Ubuntu 22.04+ written in Pyth
 (PySide6). SVG is its native file format. It is an original, independent project and makes no
 network connections at runtime.
 
-![MegaPencil main window](docs/screenshots/milestone1-dark.png)
+![MegaPencil main window](docs/screenshots/main-dark.png)
 
 ## Requirements
 

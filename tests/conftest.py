@@ -15,7 +15,7 @@ def qapp():
 @pytest.fixture
 def window(qapp, tmp_path, monkeypatch):
     """A MainWindow with isolated settings / data directories and one document."""
-    from PySide6.QtCore import QSettings
+    from PySide6.QtCore import QCoreApplication, QEvent, QSettings
 
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
@@ -31,3 +31,4 @@ def window(qapp, tmp_path, monkeypatch):
     win.close()
     win.deleteLater()
     qapp.processEvents()
+    QCoreApplication.sendPostedEvents(None, QEvent.DeferredDelete)  # really destroy the window

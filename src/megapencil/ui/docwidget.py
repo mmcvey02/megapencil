@@ -45,6 +45,7 @@ class DocumentTab(QWidget):
         grid.addWidget(self.vruler, 1, 0)
         grid.addWidget(self.view, 1, 1)
         self.stack.indexChanged.connect(self._mark_dirty)
+        self.scene.selectionChangedSignal.connect(self.view.refresh)
 
     def _mark_dirty(self, *_):
         self.autosave_dirty = True

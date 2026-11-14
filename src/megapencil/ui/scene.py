@@ -162,7 +162,6 @@ class DocumentScene(QGraphicsScene):
             self.selection = items
             self._sel_rect_valid = False
             self.selectionChangedSignal.emit()
-            self.update()
 
     def _prune_selection(self) -> None:
         keep = [it for it in self.selection if self.doc.contains(it)]

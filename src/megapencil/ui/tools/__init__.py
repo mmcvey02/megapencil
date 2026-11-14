@@ -4,6 +4,7 @@ from .nav import HandTool, ZoomTool
 from .pen import PenTool
 from .select import SelectTool
 from .shapes import EllipseTool, LineTool, RectTool
+from .text import TextTool
 
 TOOL_CLASSES = [SelectTool, DirectSelectTool, PenTool, AddAnchorTool, DeleteAnchorTool, ConvertAnchorTool,
-                RectTool, EllipseTool, LineTool, HandTool, ZoomTool]
+                RectTool, EllipseTool, LineTool, TextTool, HandTool, ZoomTool]
