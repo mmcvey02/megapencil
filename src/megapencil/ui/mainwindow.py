@@ -265,16 +265,7 @@ class MainWindow(QMainWindow):
         return [leaf for it in self.selection() for leaf in it.leaves()]
 
     def selection_rect(self) -> QRectF | None:
-        tab = self.tab
-        if not tab or not tab.scene.selection:
-            return None
-        rect = QRectF()
-        for it in tab.scene.selection:
-            for leaf in it.leaves():
-                g = tab.scene.graphics.get(id(leaf))
-                if g:
-                    rect = rect.united(g.path().boundingRect()) if not rect.isNull() else g.path().boundingRect()
-        return rect if not rect.isNull() or tab.scene.selection else None
+        return self.tab.scene.selection_rect() if self.tab else None
 
     def refresh_context(self) -> None:
         """Schedule one refresh of panels / control bar."""
@@ -569,7 +560,8 @@ class MainWindow(QMainWindow):
         if not isinstance(tab, DocumentTab) or not self._confirm_close(tab):
             return False
         tab.view.set_tool(None)
-        tab.view.blockSignals(True)  # no late signals while Qt tears the view down
+        tab.view.blockSignals(True)  # no late signals while Qt tears the tab down
+        tab.stack.blockSignals(True)
         self.autosave.discard(tab)
         self.tab_widget.removeTab(index)
         tab.deleteLater()

@@ -82,6 +82,8 @@ class DocumentScene(QGraphicsScene):
         self.graphics: dict[int, ItemGraphic] = {}
         self.layer_graphics: dict[int, LayerGraphic] = {}
         self.selection: list[Item] = []
+        self._sel_rect: QRectF | None = None
+        self._sel_rect_valid = False
         self.active_layer: Layer | None = doc.layers[-1] if doc.layers else None
         self.pasteboard_color = QColor(83, 83, 83)
         self.setItemIndexMethod(QGraphicsScene.BspTreeIndex)
@@ -95,6 +97,7 @@ class DocumentScene(QGraphicsScene):
         self.setSceneRect(-m, -m, self.doc.width + 2 * m, self.doc.height + 2 * m)
 
     def _on_doc_change(self, kind: str, objs: list) -> None:
+        self._sel_rect_valid = False
         if kind == "structure":
             self.rebuild()
             self._prune_selection()
@@ -157,6 +160,7 @@ class DocumentScene(QGraphicsScene):
         items = list(dict.fromkeys(items))
         if items != self.selection:
             self.selection = items
+            self._sel_rect_valid = False
             self.selectionChangedSignal.emit()
             self.update()
 
@@ -164,6 +168,19 @@ class DocumentScene(QGraphicsScene):
         keep = [it for it in self.selection if self.doc.contains(it)]
         if keep != self.selection:
             self.set_selection(keep)
+
+    def selection_rect(self) -> QRectF | None:
+        """Geometric bounds of the selection in document coordinates (cached)."""
+        if not self._sel_rect_valid:
+            rect = None
+            for it in self.selection:
+                for leaf in it.leaves():
+                    g = self.graphics.get(id(leaf))
+                    if g:
+                        b = g.path().boundingRect()
+                        rect = b if rect is None else rect.united(b)
+            self._sel_rect, self._sel_rect_valid = rect, True
+        return QRectF(self._sel_rect) if self._sel_rect is not None else None
 
     def selectable_items(self) -> list[Item]:
         out = []
