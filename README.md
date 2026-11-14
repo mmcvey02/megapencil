@@ -69,6 +69,27 @@ QT_QPA_PLATFORM=offscreen python tests/screenshot.py out.png
 
 Help ▸ Keyboard Shortcuts (F1) lists every shortcut.
 
+## Single-file application (AppImage)
+
+```bash
+packaging/build_appimage.sh
+```
+
+This produces `dist/MegaPencil-0.1.0-x86_64.AppImage`: one file containing MegaPencil, its own
+Python interpreter, Qt and pyclipper. Nothing needs to be installed on the target machine
+(Ubuntu 22.04 or newer, x86-64). Double-click it to start; pass SVG files as arguments to open
+them. If your file manager does not start it, mark it executable once (right-click ▸ Properties ▸
+"Executable as Program"), or:
+
+```bash
+chmod +x MegaPencil-0.1.0-x86_64.AppImage
+```
+
+The build script downloads a relocatable CPython (python-build-standalone) and appimagetool from
+GitHub, and a few small X11 helper libraries with `apt-get download`; the built application
+itself never uses the network. On systems without FUSE, run it with
+`--appimage-extract-and-run`.
+
 ## Install as a .deb
 
 ```bash
@@ -112,7 +133,7 @@ install it on. Ubuntu 22.04 ships Python 3.10; install Python 3.11+ first and bu
   main window.
 - `tests/` – pytest suite: model, path math, SVG round-trip, undo, and headless GUI tests for
   every tool and panel, plus a 5,000-object performance test.
-- `packaging/` – `.desktop` entry and `.deb` build script.
+- `packaging/` – `.desktop` entry, AppImage and `.deb` build scripts.
 
 ## Licence
 

@@ -239,7 +239,8 @@ class DocumentScene(QGraphicsScene):
     def drawBackground(self, painter, rect) -> None:
         painter.fillRect(rect, self.pasteboard_color)
         page = QRectF(0, 0, self.doc.width, self.doc.height)
-        painter.fillRect(page.translated(3, 3), QColor(0, 0, 0, 60))
+        off = 3.0 / max(painter.worldTransform().m11(), 1e-6)  # 3 px shadow at any zoom
+        painter.fillRect(page.translated(off, off), QColor(0, 0, 0, 60))
         painter.fillRect(page, QBrush(Qt.white))
         pen = QPen(QColor(0, 0, 0, 160), 0)
         painter.setPen(pen)
