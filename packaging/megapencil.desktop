@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MegaPencil
+GenericName=Vector Graphics Editor
+Comment=Draw and edit vector graphics (SVG)
+Exec=megapencil %F
+Icon=megapencil
+Terminal=false
+Categories=Graphics;VectorGraphics;2DGraphics;Qt;
+MimeType=image/svg+xml;
+Keywords=vector;svg;drawing;illustration;pen;bezier;
+StartupNotify=true
+StartupWMClass=megapencil
