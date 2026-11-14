@@ -6,6 +6,13 @@ network connections at runtime.
 
 ![MegaPencil main window](docs/screenshots/main-dark.png)
 
+## Download
+
+[**MegaPencil-0.1.0-x86_64.AppImage**](releases/MegaPencil-0.1.0-x86_64.AppImage) (54 MB) – one
+file for Ubuntu 22.04+ on x86-64 with everything inside. Open the link, press **Download raw
+file**, mark the file executable once (right-click ▸ Properties ▸ "Executable as Program"), then
+double-click it.
+
 ## Requirements
 
 - Python 3.11 or newer
