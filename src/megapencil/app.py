@@ -30,6 +30,19 @@ def main(argv=None) -> int:
     if "--version" in argv:
         print(f"{APP_NAME} {__version__}")
         return 0
+    if "--install" in argv or "--uninstall" in argv:
+        from . import desktop_install
+
+        try:
+            if "--install" in argv:
+                print(f"{APP_NAME} was added to your application menu ({desktop_install.install()}).")
+            else:
+                removed = desktop_install.uninstall()
+                print(f"Removed {len(removed)} file(s)." if removed else f"{APP_NAME} was not installed.")
+        except (RuntimeError, OSError) as e:
+            print(f"{APP_NAME}: {e}", file=sys.stderr)
+            return 1
+        return 0
     app = create_app(argv)
     from .ui.mainwindow import MainWindow
 

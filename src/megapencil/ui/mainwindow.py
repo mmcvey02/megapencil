@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (QApplication, QColorDialog, QDockWidget, QFileDia
 
 from .. import APP_NAME
 from .. import commands as C
+from .. import desktop_install
 from ..model import ops, svgio
 from ..model.boolean import boolean_op
 from ..model.geometry import Transform
@@ -223,6 +224,8 @@ class MainWindow(QMainWindow):
 
         m = mb.addMenu("&Help")
         self._act(m, "Keyboard Shortcuts…", self.show_shortcuts, "F1")
+        self.a_install = self._act(m, "Add to Application Menu", self.install_to_menu)
+        self.a_install.setEnabled(desktop_install.appimage_path() is not None)
         self._act(m, f"About {APP_NAME}", self.about)
 
         # tool and swatch shortcuts
@@ -409,6 +412,7 @@ class MainWindow(QMainWindow):
     # File
     # ==================================================================
     def startup(self, files: list[str]) -> None:
+        self.offer_install()
         self.recover_autosaves()
         for f in files:
             self.open_file(f)
@@ -896,6 +900,35 @@ class MainWindow(QMainWindow):
             if keys:
                 rows.append((area, a.text().replace("&", "").rstrip("…"), keys))
         return rows + EXTRA_SHORTCUTS
+
+    def offer_install(self) -> None:
+        """First start from an AppImage: offer to add a menu entry (asked once)."""
+        if (not self.interactive or desktop_install.appimage_path() is None or desktop_install.is_installed()
+                or self.settings.get("install_prompted")):
+            return
+        self.settings.set("install_prompted", True)
+        r = QMessageBox.question(
+            self, APP_NAME,
+            f"Add {APP_NAME} to your application menu?\n\n"
+            "It will then start with one click from the menu, like any installed application. "
+            "You can also do this later from the Help menu.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        if r == QMessageBox.Yes:
+            self.install_to_menu()
+
+    def install_to_menu(self) -> bool:
+        try:
+            desktop_install.install()
+        except (RuntimeError, OSError) as e:
+            self.error(str(e))
+            return False
+        text = (f"{APP_NAME} is now in your application menu.\n\n"
+                "The downloaded file is no longer needed; you can delete it.")
+        if self.interactive:
+            QMessageBox.information(self, APP_NAME, text)
+        else:
+            self.status_message(text)
+        return True
 
     def show_shortcuts(self) -> None:
         ShortcutsDialog(self, self.shortcut_rows()).exec()

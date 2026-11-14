@@ -6,15 +6,33 @@ network connections at runtime.
 
 ![MegaPencil main window](docs/screenshots/main-dark.png)
 
-## Download
+## Download and install
 
-Get **MegaPencil-x86_64.AppImage** from the
-[latest release](https://github.com/mmcvey02/megapencil/releases/latest): one file for Ubuntu
-22.04+ on x86-64 with everything inside. Mark it executable once (right-click ▸ Properties ▸
-"Executable as Program"), then double-click it.
+**One click after a normal install (recommended).** Download
+[megapencil_0.1.0_amd64.deb](releases/megapencil_0.1.0_amd64.deb) (press **Download raw file**),
+double-click it and press **Install**. MegaPencil then appears in your application menu with its
+icon and starts with one click. The package brings its own Python and Qt, so it works on Ubuntu
+22.04 or newer (x86-64) without anything else. From a terminal:
 
-Releases are built by `.github/workflows/release.yml`: run it from the Actions tab (Release ▸ Run
-workflow) or push a `v*` tag.
+```bash
+sudo apt install ./megapencil_0.1.0_amd64.deb
+```
+
+**Without installing.** Download
+[MegaPencil-0.1.0-x86_64.AppImage](releases/MegaPencil-0.1.0-x86_64.AppImage), then run this once
+(a downloaded file is never executable, so a first double-click cannot start it):
+
+```bash
+chmod +x MegaPencil-0.1.0-x86_64.AppImage && ./MegaPencil-0.1.0-x86_64.AppImage --install
+```
+
+That adds MegaPencil to your application menu for your user only (no password needed); the
+downloaded file can then be deleted. Starting the AppImage normally also offers this on first
+run, and Help ▸ Add to Application Menu does it at any time. `--uninstall` removes it again.
+
+Both files are also attached to the
+[latest release](https://github.com/mmcvey02/megapencil/releases/latest) once the Release
+workflow has been run (Actions tab ▸ Release ▸ Run workflow, or push a `v*` tag).
 
 ## Requirements
 
@@ -79,42 +97,18 @@ QT_QPA_PLATFORM=offscreen python tests/screenshot.py out.png
 
 Help ▸ Keyboard Shortcuts (F1) lists every shortcut.
 
-## Single-file application (AppImage)
-
-```bash
-packaging/build_appimage.sh
-```
-
-This produces `dist/MegaPencil-0.1.0-x86_64.AppImage`: one file containing MegaPencil, its own
-Python interpreter, Qt and pyclipper. Nothing needs to be installed on the target machine
-(Ubuntu 22.04 or newer, x86-64). Double-click it to start; pass SVG files as arguments to open
-them. If your file manager does not start it, mark it executable once (right-click ▸ Properties ▸
-"Executable as Program"), or:
-
-```bash
-chmod +x MegaPencil-0.1.0-x86_64.AppImage
-```
-
-The build script downloads a relocatable CPython (python-build-standalone) and appimagetool from
-GitHub, and a few small X11 helper libraries with `apt-get download`; the built application
-itself never uses the network. On systems without FUSE, run it with
-`--appimage-extract-and-run`.
-
-## Install as a .deb
+## Building the packages
 
 ```bash
 packaging/build_deb.sh
 ```
 
-```bash
-sudo apt install ./dist/megapencil_0.1.0_amd64.deb
-```
-
-The package bundles MegaPencil, PySide6-Essentials and pyclipper under `/opt/megapencil`, adds a
-`megapencil` command, the application-menu entry (`packaging/megapencil.desktop`) and the icon.
-It depends on the Python minor version it was built with, so build it on the Ubuntu release you
-install it on. Ubuntu 22.04 ships Python 3.10; install Python 3.11+ first and build with
-`PYTHON=python3.11 packaging/build_deb.sh`.
+This builds both `dist/MegaPencil-0.1.0-x86_64.AppImage` and `dist/megapencil_0.1.0_amd64.deb`
+(`packaging/build_appimage.sh` builds only the AppImage). Each contains MegaPencil, its own
+Python interpreter, Qt and pyclipper. The build downloads a relocatable CPython
+(python-build-standalone) and appimagetool from GitHub, and a few small X11 helper libraries with
+`apt-get download`; the built application never uses the network. On systems without FUSE the
+AppImage runs with `--appimage-extract-and-run`.
 
 ## Known limits
 

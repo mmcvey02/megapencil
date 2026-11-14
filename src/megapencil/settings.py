@@ -15,6 +15,7 @@ DEFAULTS = {
     "default_height": 600,
     "show_rulers": True,
     "max_recent": 10,
+    "install_prompted": False,
 }
 
 
