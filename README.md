@@ -13,7 +13,8 @@ Get **MegaPencil-x86_64.AppImage** from the
 22.04+ on x86-64 with everything inside. Mark it executable once (right-click ▸ Properties ▸
 "Executable as Program"), then double-click it.
 
-Releases are built by `.github/workflows/release.yml` whenever a `v*` tag is pushed.
+Releases are built by `.github/workflows/release.yml`: run it from the Actions tab (Release ▸ Run
+workflow) or push a `v*` tag.
 
 ## Requirements
 

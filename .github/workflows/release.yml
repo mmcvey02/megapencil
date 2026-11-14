@@ -1,5 +1,6 @@
 # Publishes a GitHub release with the single-file AppImage attached.
-# Runs when a version tag (v*) is pushed, or manually from the Actions tab.
+# Runs when a version tag (v*) is pushed, or manually: Actions tab > Release > Run workflow.
+# A manual run builds the chosen branch and creates the tag itself.
 name: Release
 
 on:
@@ -8,8 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release (for example v0.1.0)"
+        description: "Version tag to publish"
         required: true
+        default: "v0.1.0"
 
 permissions:
   contents: write
@@ -22,8 +24,6 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref }}
       - name: Build the AppImage
         run: |
           sudo apt-get update -q
@@ -47,5 +47,5 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/MegaPencil-*.AppImage --clobber
           else
-            gh release create "$TAG" dist/MegaPencil-*.AppImage --title "MegaPencil ${TAG#v}" --notes-file notes.md --latest
+            gh release create "$TAG" dist/MegaPencil-*.AppImage --title "MegaPencil ${TAG#v}" --notes-file notes.md --latest --target "$GITHUB_SHA"
           fi
