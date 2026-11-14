@@ -1,0 +1,51 @@
+# Publishes a GitHub release with the single-file AppImage attached.
+# Runs when a version tag (v*) is pushed, or manually from the Actions tab.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (for example v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  appimage:
+    runs-on: ubuntu-22.04
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - name: Build the AppImage
+        run: |
+          sudo apt-get update -q
+          packaging/build_appimage.sh
+      - name: Smoke-test the AppImage
+        run: |
+          sudo apt-get install -y -q libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+          QT_QPA_PLATFORM=offscreen dist/MegaPencil-*.AppImage --appimage-extract-and-run --version
+      - name: Publish the release
+        run: |
+          cat > notes.md <<'NOTES'
+          MegaPencil is a vector graphics editor for Ubuntu.
+
+          **Download `MegaPencil-*-x86_64.AppImage` below.** It is a single file with its own Python
+          and Qt inside and runs on Ubuntu 22.04 or newer (x86-64) with nothing installed. Mark it
+          executable once (right-click ▸ Properties ▸ "Executable as Program", or
+          `chmod +x MegaPencil-*.AppImage`), then double-click it.
+
+          See the README for features and known limits.
+          NOTES
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/MegaPencil-*.AppImage --clobber
+          else
+            gh release create "$TAG" dist/MegaPencil-*.AppImage --title "MegaPencil ${TAG#v}" --notes-file notes.md --latest
+          fi

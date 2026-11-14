@@ -8,10 +8,12 @@ network connections at runtime.
 
 ## Download
 
-[**MegaPencil-0.1.0-x86_64.AppImage**](releases/MegaPencil-0.1.0-x86_64.AppImage) (54 MB) – one
-file for Ubuntu 22.04+ on x86-64 with everything inside. Open the link, press **Download raw
-file**, mark the file executable once (right-click ▸ Properties ▸ "Executable as Program"), then
-double-click it.
+Get **MegaPencil-x86_64.AppImage** from the
+[latest release](https://github.com/mmcvey02/megapencil/releases/latest): one file for Ubuntu
+22.04+ on x86-64 with everything inside. Mark it executable once (right-click ▸ Properties ▸
+"Executable as Program"), then double-click it.
+
+Releases are built by `.github/workflows/release.yml` whenever a `v*` tag is pushed.
 
 ## Requirements
 
